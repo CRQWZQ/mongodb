@@ -57,7 +57,7 @@ public class InformationController {
      * 查询指定日期、指定检测昵称的用户数据
      *
      * @param time 日期 eg:2018-08-20
-     * @param nick 被检测人昵称  eg:tb_073****
+     * @param nick 昵称  eg:##_073****
      * @return
      */
     @RequestMapping(value = "/orders_by_nick", method = RequestMethod.GET)
@@ -84,7 +84,7 @@ public class InformationController {
         return Result.success(informationDao.findInformationByTimeList(time));
     }
     /**
-     * 导出Excel 验号数据
+     * 导出Excel 数据
      * @param request
      * @param response
      * @param time
