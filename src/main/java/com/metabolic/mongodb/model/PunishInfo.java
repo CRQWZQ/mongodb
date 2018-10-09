@@ -4,14 +4,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.io.Serializable;
 
-/**
- * 杭州蓝诗网络科技有限公司 版权所有 © Copyright 2018<br>
- *
- * @Description: <br>
- * @Project: <br>
- * @CreateDate: Created by 2018/09/30 <br>
- * @Author: <a href="wangzhiqiang@quannengzhanggui.cn">wzq</a>
- */
+
 public class PunishInfo implements Serializable {
 
     private static final long serialVersionUID = 3105667072090285773L;
