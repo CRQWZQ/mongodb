@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>变形记验号工具箱</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="../index.css">
+    <script src="../jquery.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+</head>
+
+<body>
+    <div id="app">
+        <div class="page">
+            <input type="text" value="€6Lp4b37Bbhn€" id="link-text" style="position: absolute;top: -100px;">
+            <div class="title" style="margin: 30px 0;color: #666">
+                <div class="left" style="justify-content: space-between;">
+                    <span style="margin-right:10px;">淘口令 : €6Lp4b37Bbhn€ <el-button type="primary" size="small" id="copy-btn" style="margin-left: 10px">复制</el-button></span>
+                    <span>二维码</span>
+                    <span ><img class="scaleImg" src="../img.png" alt="" style=""></span>
+                </div>
+            </div>
+            <div class="title">
+                <div class="left">
+                    <div class="time">
+                        <el-date-picker v-model="value1" type="date" placeholder="选择日期" size="small" format="yyyy-MM-dd" value-format="yyyy-MM-dd" @change="getDate">
+                        </el-date-picker>
+                    </div>
+                    <div class="tab">
+                        <span style="margin-right:10px;">所有记录</span>
+                        <el-input placeholder="请输入昵称" v-model="input5" class="input-with-select" style="width: 200px;" size="small">
+
+                            <el-button slot="append" icon="el-icon-refresh" @click="getDate"></el-button>
+                        </el-input>
+
+
+                    </div>
+                </div>
+                <div class="right">
+                    <el-button type="primary" size="small" @click="exportData">导出</el-button>
+                    <i class="el-icon-arrow-left"></i>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+            </div>
+            <div class="content-table">
+                <el-table :data="tableData" border style="width: 100%" v-loading="loading">
+                    <el-table-column prop="add" label="" fixed="left" width="50">
+                        <template slot-scope="scope">
+                            <span @click="test(scope.row)" style="cursor: pointer;">+</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="nick" label="淘宝账号" fixed="left" width="180">
+                    </el-table-column>
+                    <el-table-column prop="punishCountStr" label="违规记录">
+                    </el-table-column>
+                    <el-table-column prop="rateDeleteCount" label="删评记录">
+                    </el-table-column>
+                    <el-table-column prop="noSalesCount" label="不记销量">
+                    </el-table-column>
+                    <el-table-column prop="trueName" label="真实姓名">
+                    </el-table-column>
+                    <el-table-column prop="realNameAuth" label="实名认证">
+                    </el-table-column>
+                    <el-table-column prop="sex" label="性别">
+                    </el-table-column>
+                    <el-table-column prop="birthday" label="生日">
+                    </el-table-column>
+                    <el-table-column prop="taoScore" label="淘气值">
+                    </el-table-column>
+                    <el-table-column prop="credit" label="等级">
+                    </el-table-column>
+                    <el-table-column prop="feedbackRate" label="好评率">
+                    </el-table-column>
+                </el-table>
+
+                <div class="information" v-if="box">
+                    <div class="information-title">
+                        <div>买号信息</div>
+                        <div @click="close" style="cursor: pointer;">X</div>
+                    </div>
+                    <div class="information-content">
+                        <div class="box">
+                            <div class="img">
+                                <img :src="totalData.nickImg" alt="">
+                            </div>
+                            <div class="text">
+                                <p>淘宝账号：{{totalData.nick}}</p>
+                                <p>姓名：{{totalData.trueName}}</p>
+                                <p>性别：{{totalData.sex}}</p>
+                                <p>更新时间：{{totalData.createTime}}</p>
+                            </div>
+                            <div class="text">
+                                <p>淘气值：{{totalData.taoScore}}</p>
+                                <p>等级：{{totalData.credit}}</p>
+                                <p>生日：{{totalData.birthday}}</p>
+                            </div>
+                        </div>
+                        <div class="collapse">
+                            <el-collapse v-model="activeNames" @change="handleChange">
+                                <el-collapse-item  name="1">
+                                    <template slot="title">
+                                        违规记录（{{IrregularitiesList.length}}）
+                                    </template>
+                                    <div v-if="!IrregularitiesList.length" class="sign">无违规记录</div>
+                                    <!--违规信息展示-->
+                                    <div class="irregularities" v-for="irregularities in IrregularitiesList">
+                                        <div class="border">
+                                            <p>违规编号：{{irregularities.punishId}}</p>
+                                            <p>违规类型：{{irregularities.pointRangeStr}}</p>
+                                            <p>违规名称：{{irregularities.ruleCodeName}}</p>
+                                        </div>
+                                    </div>
+                                </el-collapse-item>
+                                <el-collapse-item title="" name="2">
+                                    <template slot="title">
+                                        评价记录（{{evaluateList.length}}条评价，违规删除{{deleteCount}}条）
+                                    </template>
+                                    <div v-if="!evaluateList.length" class="sign">无评价记录</div>
+                                    <!---->
+                                    <div class="evaluate" v-for="evaluate in evaluateList" :class="{'text-color':evaluate.violationType }">
+                                        <div class="border">
+                                            <p>评价时间：{{evaluate.date}}</p>
+                                            <p v-show="evaluate.violationType">删评原因：{{evaluate.violationType}}</p>
+                                            <p>评价：{{evaluate.reviewTitle}}  &nbsp;&nbsp;<span v-show="evaluate.isPoint != '正常计分'">{{evaluate.isPoint}}</span></p>
+                                            <p>评价内容：{{evaluate.comment}}</p>
+                                        </div>
+                                        <div class="border">
+                                            <p>
+                                                卖家：{{evaluate.shopName}}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p>商品：{{evaluate.tradeTitle}}</p>
+                                            <p>价格：{{evaluate.tradePrice}}</p>
+                                        </div>
+                                    </div>
+                                </el-collapse-item>
+                                <el-collapse-item title="" name="3">
+                                    <template slot="title">
+                                        购物记录（{{orderList.length}}条记录，不计销量{{saleCount}}条）
+                                    </template>
+                                    <div class="order" v-for="order in orderList" >
+                                        <div class="border" >
+                                            <p v-show="order.noCalculateSign" :class="{'text-color':order.noCalculateSign}">****不计销量****</p>
+                                            <p>订单号：{{order.orderId}}</p>
+                                            <p>店铺名：{{order.storeName}}</p>
+                                        </div>
+                                        <div class="border border-both" v-for="g in order.goods" v-show="g.goodsTitle !='保险服务'">
+                                            <div class="img">
+                                                <img :src="g.goodsImg" alt="">
+                                            </div>
+                                            <div class="describe">
+                                                <p>
+                                                    <a :href="g.goodsUrl">{{g.goodsTitle}}</a>
+                                                </p>
+                                                <p>￥{{g.goodsPrice}}</p>
+                                                <p>{{g.goodsSku1}} | {{g.goodsSku2}}{{g.goodsCount}}</p>
+                                            </div>
+                                        </div>
+                                        <div class="border border-both"  v-for="g in order.goods" v-show="g.goodsTitle =='保险服务'">
+                                            <p>保险服务</p>
+                                            <p>￥{{g.goodsPrice}}</p>
+                                        </div>
+                                        <div>
+                                            <p>实际付款：￥{{order.realPay}}</p>
+                                            <p>下单时间：{{order.tradeTime}}</p>
+                                            <p>订单状态：{{order.goodsStatus}}</p>
+                                        </div>
+                                    </div>
+                                </el-collapse-item>
+                            </el-collapse>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="mask" v-if="box">
+        </div>
+    </div>
+</body>
+
+</html>
+<script>
+    (function ($) {
+        var app = new Vue({
+            el: "#app",
+            data: {
+                message: "hello",
+                activeName: 'first',
+                value1: '',
+                dialogVisible: false,
+                input5:"",
+                tableData: [],
+                activeNames: ['3'],
+                box: false,
+                totalData:[],
+                loading:false,
+                orderList: [],
+                deleteCount:0,
+                saleCount:0,
+                evaluateList: [],
+                IrregularitiesList: []
+            },
+            methods: {
+                handleChange(val) {
+//                    console.log(val);
+                },
+                getCount(){
+                    this.deleteCount = 0;
+                    this.saleCount = 0;
+                    if(this.evaluateList.length == 0){
+                        this.deleteCount = 0;
+                    }else{
+                        this.evaluateList.forEach((item) => {
+                            if(item.violationType) ++this.deleteCount
+                        })
+                    }
+                    if(this.orderList.length == 0){
+                        this.saleCount = 0;
+                    }else{
+                        this.orderList.forEach((item) => {
+                            if(item.noCalculateSign) ++this.saleCount
+                        })
+                    }
+                },
+                test(param) {
+                    console.log(param);
+
+                    this.box = true;
+                    $.get("/info/order_by_id?id="+param.id,  (data) => {
+                        this.orderList = data.data.ordersInfo;
+                        this.evaluateList = data.data.commentInfo;
+                        this.IrregularitiesList = data.data.punishInfo;
+                        this.totalData = data.data;
+                        this.getCount();
+                    })
+                    //this.orderList = param.ordersInfo;
+                    //this.evaluateList = param.commentInfo;
+                    //this.totalData = param;
+                },
+                close() {
+                    this.box = false;
+                },
+                getDate(){
+                    this.loading = true;
+                    var that = this;
+                    $.get("/info/orders_info?time="+that.value1,function (data) {
+                        console.log(data)
+                        that.loading = false;
+                        that.totalData = data.data;
+                        that.tableData = that.totalData;
+                        that.tableData.forEach(function (item) {
+                            if(!item.taoScore){
+                                item.taoScore = ''
+                            }
+                            if(!item.rateDeleteCount){
+                                item.rateDeleteCount = 0
+                            }
+
+                        })
+//                        console.log(that.totalData)
+                    })
+                },
+                exportData(){
+
+                    if(this.tableData.length){
+                        var form = document.createElement("form");
+                        form.setAttribute('style', 'display:none');   //在form表单中添加查询参数
+                        form.setAttribute('target', '_black');
+                        form.setAttribute('method', 'get');
+                        form.setAttribute('action', "//localhost/info/orders_info_export");//
+                        document.getElementsByTagName('body')[0].appendChild(form);
+                        var parameter = [{
+                            name: "time",
+                            value: this.value1,
+                            type: "hidden"
+                        }];
+                        parameter.forEach(function (data) {
+                            var input = document.createElement('input');
+                            input.setAttribute("name", data.name);
+                            input.setAttribute("value", data.value);
+                            if (data.type) {
+                                input.setAttribute("type", data.type);
+                            }
+                            form.append(input);
+                        });
+                        form.submit();
+                    }else{
+                        this.$message({
+                            message: '无数据可导',
+                            type: 'warning'
+                        });
+                    }
+
+                },
+
+            },
+            created: function () {
+                Date.prototype.Format = function (fmt) {
+                    var o = {
+                        "M+": this.getMonth() + 1, //月份
+                        "d+": this.getDate(), //日
+                        "H+": this.getHours(), //小时
+                        "m+": this.getMinutes(), //分
+                        "s+": this.getSeconds(), //秒
+                        "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+                        "S": this.getMilliseconds() //毫秒
+                    };
+                    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+                    for (var k in o)
+                        if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+                    return fmt;
+                }
+
+                this.value1 = new Date().Format("yyyy-MM-dd")
+            },
+            mounted: function () {
+                this.getDate();
+//                console.log(this.value1)
+                var btn = document.getElementById("copy-btn");
+                self = this;
+                btn.onclick = function (e) {
+                    document.getElementById("link-text").select();
+                    document.execCommand("copy", false, null);
+                    self.$message({
+                        message: '复制成功',
+                        type: 'success'
+                    });
+                };
+            }
+        })
+
+
+
+    })(jQuery)
+</script>
